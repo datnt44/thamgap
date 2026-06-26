@@ -54,32 +54,32 @@ app.get("/api/a2/search", async (req, res) => {
       });
     }
 
-   const result = await pool.query(
-  `
-  SELECT 
-    "STT",
-    "Họ và tên",
-    "Ngày sinh",
-    "Nơi TT",
-    "TrangThai"
-  FROM public."_A2"
-  WHERE
-    "TrangThai" = 'Đang trong NTG'
-    AND (
-      ($1 <> '' AND REPLACE(TRIM("Số CCCD"::text), ' ', '') = $1)
-      OR
-      ($2 <> '' AND LOWER(TRIM("Họ và tên"::text)) LIKE LOWER('%' || $2 || '%'))
-    )
-  ORDER BY "Họ và tên"
-  LIMIT 5
-  `,
-  [cccd, hoten]
-);
+    const result = await pool.query(
+      `
+      SELECT 
+        "STT",
+        "Họ và tên",
+        "Ngày sinh",
+        "Nơi TT",
+        "TrangThai"
+      FROM public."_A2"
+      WHERE
+        "TrangThai" = 'Đang trong NTG'
+        AND (
+          ($1 <> '' AND REPLACE(TRIM("Số CCCD"::text), ' ', '') = $1)
+          OR
+          ($2 <> '' AND LOWER(TRIM("Họ và tên"::text)) LIKE LOWER('%' || $2 || '%'))
+        )
+      ORDER BY "Họ và tên"
+      LIMIT 5
+      `,
+      [cccd, hoten]
+    );
 
     if (result.rowCount === 0) {
       return res.json({
         ok: false,
-        error: "Không tìm thấy thông tin"
+        error: "Không tìm thấy thông tin hoặc người này không còn trong NTG"
       });
     }
 
@@ -105,6 +105,13 @@ app.post("/api/thamgap", async (req, res) => {
       return res.status(400).json({
         ok: false,
         error: "Bạn cần chọn người được thăm gặp trước"
+      });
+    }
+
+    if (!d.Ten1 || !d.NamSinh1 || !d.CCCD1 || !d.NgayCap1 || !d.NoiCap1 || !d.HKTT || !d.QuanHe1 || !d.PhoneNumber) {
+      return res.status(400).json({
+        ok: false,
+        error: "Vui lòng điền đầy đủ thông tin người thăm gặp 1"
       });
     }
 
@@ -148,16 +155,19 @@ app.post("/api/thamgap", async (req, res) => {
         d.HKTT || null,
         d.QuanHe1 || null,
         d.PhoneNumber || null,
+
         d.Ten2 || null,
         d.CCCD2 || null,
         d.QuanHe2 || null,
+
         d.Ten3 || null,
         d.CCCD3 || null,
         d.QuanHe3 || null,
+
         d.NgayDeXuat || new Date().toISOString().slice(0, 10),
-        d.NgayThamGap || null,
-        d.GioThamGap || null,
-        d.TrangThai || "Chờ duyệt"
+        null,
+        null,
+        "Chờ duyệt"
       ]
     );
 
